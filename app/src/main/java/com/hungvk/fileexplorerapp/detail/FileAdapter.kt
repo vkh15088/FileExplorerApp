@@ -6,11 +6,13 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.hungvk.fileexplorerapp.R
+import com.hungvk.fileexplorerapp.common.FileUtils
 import com.hungvk.fileexplorerapp.databinding.FileContainerBinding
 import java.io.File
 
 class FileAdapter(
-    var fileList: List<File>
+    var fileList: List<File>,
+    var listener: OnFileClickListener
 ): RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
 
     inner class FileViewHolder(val binding: FileContainerBinding) : RecyclerView.ViewHolder(binding.root)
@@ -36,11 +38,24 @@ class FileAdapter(
 
         //Set appropriate image
         setImage(selectedFile, holder)
+
+        //Set click listener
+        setListener(selectedFile, holder)
+    }
+
+    private fun setListener(selectedFile: File, holder: FileViewHolder) {
+        holder.binding.linearFileContainer.setOnClickListener {view ->
+            listener.onFileClicked(selectedFile)
+        }
     }
 
     private fun setImage(selectedFile: File, holder: FileViewHolder) {
         when(selectedFile.extension){
-            "jpeg", "jpg", "png" -> holder.binding.imgFile.setImageBitmap(BitmapFactory.decodeFile(selectedFile.absolutePath))
+            "jpeg", "jpg", "png" ->  {
+                val originalBitmap = BitmapFactory.decodeFile(selectedFile.absolutePath)
+                val resizedBitmap = FileUtils.getResizedBitmap(originalBitmap, 50)
+                holder.binding.imgFile.setImageBitmap(resizedBitmap)
+            }
              "pdf" -> holder.binding.imgFile.setImageResource(R.drawable.pdf_image)
              "doc" -> holder.binding.imgFile.setImageResource(R.drawable.doc_image)
              "mp3", "wav" -> holder.binding.imgFile.setImageResource(R.drawable.audio_image)

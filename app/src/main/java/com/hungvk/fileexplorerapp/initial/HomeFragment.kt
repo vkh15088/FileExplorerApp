@@ -15,10 +15,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.hungvk.fileexplorerapp.R
+import com.hungvk.fileexplorerapp.databinding.FragmentDetailBinding
+import com.hungvk.fileexplorerapp.databinding.FragmentHomeBinding
+import com.hungvk.fileexplorerapp.detail.DetailActivity
 
 class HomeFragment : Fragment() {
 
     private lateinit var alertDialog: AlertDialog
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
 
     private val activityResultLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()){}
@@ -32,7 +37,8 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        _binding = FragmentHomeBinding.inflate(layoutInflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -126,6 +132,11 @@ class HomeFragment : Fragment() {
     private fun initView() {
         initAlertDialog()
 
+        binding.linearInternal.setOnClickListener {
+            val intent = Intent(requireActivity(), DetailActivity::class.java)
+            intent.putExtra("title", "Internal Storage")
+            startActivity(intent)
+        }
     }
 
     private fun initAlertDialog(){

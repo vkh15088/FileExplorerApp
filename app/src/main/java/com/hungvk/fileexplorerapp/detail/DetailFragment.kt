@@ -4,14 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.hungvk.fileexplorerapp.R
+import com.hungvk.fileexplorerapp.common.FileUtils
 import com.hungvk.fileexplorerapp.databinding.FragmentDetailBinding
 import java.io.File
+import java.io.IOException
 import kotlin.collections.ArrayList
 
 
-class DetailFragment : Fragment() {
+class DetailFragment : Fragment(), OnFileClickListener {
 
     private var _binding: FragmentDetailBinding? = null
     private val binding get() = _binding!!
@@ -19,6 +23,7 @@ class DetailFragment : Fragment() {
     private lateinit var fileList: ArrayList<File>
     private lateinit var fileAdapter: FileAdapter
     private lateinit var storage: File
+    private lateinit var dataBundle: String
     private lateinit var listener: OnDetailFragmentListener
     private val fileExtensionList = listOf("jpeg", "jpg", "png", "mp3", "wav", "mp3", "wav", "mp4", "pdf", "doc", "apk")
 
@@ -43,8 +48,14 @@ class DetailFragment : Fragment() {
             return
         }
 
-        val internalStorage = System.getenv("EXTERNAL_STORAGE")
-        storage = File(internalStorage)
+        if (arguments != null){
+            dataBundle = requireArguments().getString("path").toString()
+            storage = File(dataBundle)
+        } else {
+            val internalStorage = System.getenv("EXTERNAL_STORAGE")
+            storage = File(internalStorage)
+        }
+
         listener.setPath(storage.absolutePath)
 
         displayFiles()
@@ -59,7 +70,7 @@ class DetailFragment : Fragment() {
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         fileList = ArrayList(allFileList(storage))
-        fileAdapter = FileAdapter(fileList)
+        fileAdapter = FileAdapter(fileList, this)
         binding.recyclerView.adapter = fileAdapter
     }
 
@@ -86,5 +97,29 @@ class DetailFragment : Fragment() {
         return arrayList
     }
 
+    override fun onFileClicked(file: File) {
+        if (file.isDirectory){
+            val bundle = Bundle().apply {
+                putString("path", file.absolutePath)
+            }
+
+            val detailFragment = DetailFragment().apply {
+                arguments = bundle
+            }
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, detailFragment)
+                .addToBackStack(null)
+                .commit()
+            return
+        }
+
+        try{
+            FileUtils.openFile(requireContext(), file)
+        } catch (e: IOException){
+            Toast.makeText(requireContext(), "Cannot open this file !", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
 
 }
